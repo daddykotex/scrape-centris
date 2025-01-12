@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "sample-project"
+name = "scrape-centris"
 version = "0.1.0"
 description = ""
-authors = ["Author Name <author@example.com>"]
+authors = ["David Francoeur"]
 # readme = "README.md"
 # license = "BSD"
 packages = [
-  { include = "sample_package" }
+  { include = "scrape_centris" }
 ]
 
 [tool.poetry.dependencies]
