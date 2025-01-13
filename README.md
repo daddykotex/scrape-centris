@@ -17,7 +17,9 @@ Then you'll need to install the dependencies, for that, you can run: `poetry ins
 
 ## Running the project
 
-You can do: `poetry run python -m sample_package` to run the project.
+Scrapy is used to load the data from Centris.
+
+You can do: `scrapy crawl centris-plex -O results.json` to run the scraper.
 
 ## Resources
 
