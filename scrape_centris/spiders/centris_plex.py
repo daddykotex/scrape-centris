@@ -70,7 +70,7 @@ class CentrisPlexSpider(scrapy.Spider):
             "Année de construction",
             "Superficie du terrain",
             "Stationnement total",
-            "Nombre d'unités",
+            "Nombre d’unités",
             "Unités résidentielles",
             "Revenus bruts potentiels",
         ]
