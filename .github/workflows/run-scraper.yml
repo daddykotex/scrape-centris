@@ -8,6 +8,10 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
     
     steps:
       - name: Checkout repository
@@ -23,3 +27,12 @@ jobs:
           
       - name: Install dependencies
         run: poetry install --no-root --no-interaction
+
+      - name: Run scraper
+        run: .github/scripts/run.sh
+
+      - name: Upload scraped data
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraped-listings
+          path: ${{ env.OUTPUT_FILE }}
