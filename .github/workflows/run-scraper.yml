@@ -1,0 +1,25 @@
+name: Run Scraper
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          
+      - name: Install Poetry
+        run: pip install poetry
+          
+      - name: Install dependencies
+        run: poetry install --no-root --no-interaction
