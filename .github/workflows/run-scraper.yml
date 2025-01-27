@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
 
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -15,7 +19,13 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/813050693418/locations/global/workloadIdentityPools/github-actions-scrape-centris/providers/github'
+          service_account: 'scrape-centris@dfrancoeur.iam.gserviceaccount.com'
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -39,11 +49,8 @@ jobs:
       - name: Run scraper
         run: .github/scripts/run.sh
 
-      - name: Create release
-        env:
-          GH_TOKEN: ${{ secrets.PAT_SCRAPE_CENTRIS }}
-        run: |
-          gh release create "listings-${CURRENT_DATETIME}" \
-            --generate-notes \
-            --notes "Listings scraped on ${CURRENT_DATETIME}" \
-            "${OUTPUT_FILE}"
+      - id: 'upload-file'
+        uses: 'google-github-actions/upload-cloud-storage@v2'
+        with:
+          path: ${{ env.OUTPUT_FILE }}
+          destination: ${{ secrets.GCS_BUCKET_SCRAPE_CENTRIS }}
