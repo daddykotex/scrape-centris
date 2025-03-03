@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: 'read'
@@ -26,17 +29,6 @@ jobs:
         with:
           workload_identity_provider: 'projects/813050693418/locations/global/workloadIdentityPools/github-actions-scrape-centris/providers/github'
           service_account: 'scrape-centris@dfrancoeur.iam.gserviceaccount.com'
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: '.python-version'
-          
-      - name: Install Poetry
-        run: pip install poetry
-          
-      - name: Install dependencies
-        run: poetry install --no-root --no-interaction
 
       - name: Set required environment variables
         run: |
@@ -46,11 +38,38 @@ jobs:
           OUTPUT_FILE="listings_${CURRENT_DATETIME}.json"
           echo "OUTPUT_FILE=${OUTPUT_FILE}" >> "$GITHUB_ENV"
 
-      - name: Run scraper
-        run: .github/scripts/run.sh
+          DB_NAME="scrape-centris.db"
+          echo "DB_NAME=${DB_NAME}" >> "$GITHUB_ENV"
 
-      - id: 'upload-file'
-        uses: 'google-github-actions/upload-cloud-storage@v2'
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          path: ${{ env.OUTPUT_FILE }}
-          destination: ${{ secrets.GCS_BUCKET_SCRAPE_CENTRIS }}
+          python-version-file: '.python-version'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+        with:
+          version: '>= 363.0.0'
+
+      - name: 'Use gcloud CLI'
+        run: 'gcloud info'
+
+      - name: Download database
+        run: |
+          gcloud storage cp "gs://${{ secrets.GCS_BUCKET_SCRAPE_CENTRIS }}/${DB_NAME}" ./${DB_NAME}
+          
+      - name: Install Poetry
+        run: pip install poetry
+          
+      - name: Install dependencies
+        run: poetry install --no-root --no-interaction
+
+      - name: Run scraper
+        run: .github/scripts/run.sh "./${OUTPUT_FILE}"
+
+      - name: Add result to database
+        run: .github/scripts/indb.sh "./${DB_NAME}" "./${OUTPUT_FILE}"
+
+      - name: Upload database
+        run: |
+          gcloud storage cp ./${DB_NAME} "gs://${{ secrets.GCS_BUCKET_SCRAPE_CENTRIS }}/${DB_NAME}"
